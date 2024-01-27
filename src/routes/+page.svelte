@@ -2,10 +2,10 @@
     var redirect = false;
     const evtSource = new EventSource(`http://${import.meta.env.VITE_LOCAL_IP}:8000/stream`);
     evtSource.onmessage = function(event) {
-    	if(event.data == "rick roll") {
+    	if(event.data) {
     	    redirect = true;
-    	    // window.location.replace(import.meta.env.VITE_RR);
-    	    window.location.href = import.meta.env.VITE_RR;
+    	    // window.location.replace(event.data);
+    	    window.location.href = event.data;
     	}
     	else {
     	    redirect = false;
