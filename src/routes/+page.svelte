@@ -1,6 +1,4 @@
 <script>    	
-    import { slide } from 'svelte/transition';
-
     var redirect = false;
     const evtSource = new EventSource(`http://${import.meta.env.VITE_LOCAL_IP}:8000/stream`);
     evtSource.onmessage = function(event) {
@@ -83,6 +81,7 @@
     let cur_step = 0;
     let is_entry_phase = false;
     let cur_puzzle = make_puzzle();
+    $: zipped_puzzle = puzzle_zip(cur_puzzle);
     let pin = "";
     let show_pin = false;
 
@@ -90,27 +89,25 @@
     let digits = "";
     let unique = {};
 
-    function gaussianRandom(mean=0, stdev=1) {
-        const u = 1 - Math.random();
-        const v = Math.random();
-        const z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-        return z * stdev + mean;
-    }
-
-    function clamp(val, min, max) {
-        return Math.min(Math.max(val, min), max); 
-    }
-
-    function clamped_gaussian() {
-        return clamp(gaussianRandom(300, 200), 0, 800);
-    } 
-
     function padNum(num) {
         return num.toString().padStart(2, "0");
     }
 
+    function rotate(arr) {
+        const elem = arr[0];
+        for(var i=0; i < 9; ++i) {
+            arr[i] = arr[i + 1];
+        }
+        arr[9] = elem;
+    }
+
     async function nextPhase() {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        for(var i = 0; i < 10; ++i) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+            rotate(cur_puzzle.sol);
+            rotate(cur_puzzle.q);
+            cur_puzzle = cur_puzzle;
+        }
         // Commenting the below line prevents automatic transitioning
         is_entry_phase = true;
     }
@@ -170,9 +167,9 @@
 {:else if is_entry_phase == false && unique_transition()}
     <!-- modify next line to prevent clicks from phase transitioning -->
     <div class="puzzle" on:click={() => is_entry_phase=true}>
-        {#each puzzle_zip(cur_puzzle) as entry}
+        {#each zipped_puzzle as entry}
             {#key unique}
-                <div class="entry" transition:slide={{delay: clamped_gaussian()}}>
+                <div class="entry">
                     {`${padNum(sub_mod100(entry.sol, entry.q))} + ${padNum(entry.q)} = ?`}
                 </div>
             {/key}
@@ -182,7 +179,7 @@
         <h2>{error}</h2>
     {/await}
 {:else if is_entry_phase === true}
-    <input bind:value={digits} placeholder="Enter Identifier digit followed by Shifted digit" type="number" readonly />
+    <input bind:value={digits} name="digits" placeholder="Enter Identifier digit followed by Shifted digit" type="number" readonly />
     <br/>
     <div class="keypad">
         <div class="key digit" on:click={() => enterNum(1)}>1</div>
