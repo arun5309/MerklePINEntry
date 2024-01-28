@@ -101,6 +101,7 @@
 
 	// Code for UI
 	let digits = '';
+	let started = false;
 
 	function padNum(num: number) {
 		return num.toString().padStart(2, '0');
@@ -159,6 +160,7 @@
 <svelte:head>
 	<title>Merkle PIN Entry</title>
 	<meta name="description" content="A cognitive trapdoor game based on Merkle puzzles" />
+	<link rel="preconnect" href={`http://${import.meta.env.VITE_LOCAL_IP}:8000/`}>
 </svelte:head>
 
 <h1>Merkle PIN Entry</h1>
@@ -166,12 +168,14 @@
 {#if redirect}
 	<!-- <video src={url} autoplay></video> -->
 	<h2>Redirected!</h2>
+{:else if !started}
+	<button on:click={() => started=true}>Start Game</button>
 {:else if cur_step == 4}
 	{#if show_pin}
 		<div>Entered PIN: {pin}</div>
 	{/if}
 	<br />
-	<button on:click={() => (show_pin = !show_pin)}>Toggle PIN Visibility</button>
+	<button on:click={() => show_pin = !show_pin}>Toggle PIN Visibility</button>
 {:else if is_entry_phase == false}
 	<!-- modify next two lines to make clicking phase transition -->
 	<!-- on:click={() => (is_entry_phase = true)} -->
