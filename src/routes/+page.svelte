@@ -1,6 +1,6 @@
-<script>
+<script lang="ts">
 	var redirect = false;
-	var url = '';
+	// var url = '';
 	const evtSource = new EventSource(`http://${import.meta.env.VITE_LOCAL_IP}:8000/stream`);
 	evtSource.onmessage = function (event) {
 		if (event.data) {
@@ -14,7 +14,7 @@
 		}
 	};
 
-	function rand_digit() {
+	function rand_digit(): number {
 		for (;;) {
 			const array = new Uint8Array(1);
 			self.crypto.getRandomValues(array);
@@ -24,7 +24,7 @@
 		}
 	}
 
-	function rand_digit_min_i(i) {
+	function rand_digit_min_i(i: number): number {
 		for (;;) {
 			const j = rand_digit();
 			if (j >= i) {
@@ -33,12 +33,12 @@
 		}
 	}
 
-	function rand_perm() {
+	function rand_perm(): Uint8Array {
 		let array = new Uint8Array(10);
 		for (var i = 0; i < 10; ++i) {
 			array[i] = i;
 		}
-		for (var i = 0; i < 9; ++i) {
+		for (i = 0; i < 9; ++i) {
 			const j = rand_digit_min_i(i);
 			const temp = array[i];
 			array[i] = array[j];
@@ -47,15 +47,20 @@
 		return array;
 	}
 
-	function sub_mod100(a, b) {
+	function sub_mod100(a: number, b: number): number {
 		return (((a - b) % 100) + 100) % 100;
 	}
 
-	function sub_mod10(a, b) {
+	function sub_mod10(a: number, b: number): number {
 		return (((a - b) % 10) + 10) % 10;
 	}
 
-	function make_puzzle() {
+	type Puzzle = {
+		sol: Uint8Array;
+		q: Uint8Array;
+	};
+
+	function make_puzzle(): Puzzle {
 		let puzzle_sol = rand_perm();
 		let puzzle_q = new Uint8Array(10);
 		for (var i = 0; i < 10; ++i) {
@@ -68,7 +73,14 @@
 		};
 	}
 
-	function puzzle_zip(puzzle) {
+	type PuzzleEntry = {
+		sol: number;
+		q: number;
+	};
+
+	type ZippedPuzzle = Array<PuzzleEntry>;
+
+	function puzzle_zip(puzzle: Puzzle): ZippedPuzzle {
 		let arr = [];
 		for (var i = 0; i < 10; ++i) {
 			arr.push({
@@ -89,13 +101,12 @@
 
 	// Code for UI
 	let digits = '';
-	let unique = {};
 
-	function padNum(num) {
+	function padNum(num: number) {
 		return num.toString().padStart(2, '0');
 	}
 
-	function rotate(arr) {
+	function rotate(arr: Uint8Array) {
 		const elem = arr[0];
 		for (var i = 0; i < 9; ++i) {
 			arr[i] = arr[i + 1];
@@ -114,12 +125,7 @@
 		is_entry_phase = true;
 	}
 
-	function unique_transition() {
-		unique = {};
-		return true;
-	}
-
-	function enterNum(num) {
+	function enterNum(num: number) {
 		if (digits.length === 2) {
 			return;
 		}
@@ -132,9 +138,9 @@
 		if (digits.length != 2) {
 			return;
 		}
-		const idDigit = Math.floor(digits / 10);
-		const shDigit = digits % 10;
-		let shift_val;
+		const idDigit = Math.floor(Number(digits) / 10);
+		const shDigit = Number(digits) % 10;
+		let shift_val: number = 0;
 		for (const num of cur_puzzle.sol) {
 			if (Math.floor(num / 10) == idDigit) {
 				shift_val = num % 10;
@@ -158,22 +164,22 @@
 <h1>Merkle PIN Entry</h1>
 
 {#if redirect}
-	<video src={url} autoplay></video>
+	<!-- <video src={url} autoplay></video> -->
+	<h2>Redirected!</h2>
 {:else if cur_step == 4}
 	{#if show_pin}
 		<div>Entered PIN: {pin}</div>
 	{/if}
 	<br />
 	<button on:click={() => (show_pin = !show_pin)}>Toggle PIN Visibility</button>
-{:else if is_entry_phase == false && unique_transition()}
-	<!-- modify next line to prevent clicks from phase transitioning -->
-	<div class="puzzle" on:click={() => (is_entry_phase = true)}>
+{:else if is_entry_phase == false}
+	<!-- modify next two lines to make clicking phase transition -->
+	<!-- on:click={() => (is_entry_phase = true)} -->
+	<div class="puzzle">
 		{#each zipped_puzzle as entry}
-			{#key unique}
-				<div class="entry">
-					{`${padNum(sub_mod100(entry.sol, entry.q))} + ${padNum(entry.q)} = ?`}
-				</div>
-			{/key}
+			<div class="entry">
+				{`${padNum(sub_mod100(entry.sol, entry.q))} + ${padNum(entry.q)} = ?`}
+			</div>
 		{/each}
 	</div>
 	{#await nextPhase() catch error}
@@ -189,18 +195,18 @@
 	/>
 	<br />
 	<div class="keypad">
-		<div class="key digit" on:click={() => enterNum(1)}>1</div>
-		<div class="key digit" on:click={() => enterNum(2)}>2</div>
-		<div class="key digit" on:click={() => enterNum(3)}>3</div>
-		<div class="key digit" on:click={() => enterNum(4)}>4</div>
-		<div class="key digit" on:click={() => enterNum(5)}>5</div>
-		<div class="key digit" on:click={() => enterNum(6)}>6</div>
-		<div class="key digit" on:click={() => enterNum(7)}>7</div>
-		<div class="key digit" on:click={() => enterNum(8)}>8</div>
-		<div class="key digit" on:click={() => enterNum(9)}>9</div>
-		<div class="key" on:click={delChar}>Backspace</div>
-		<div class="key digit" on:click={() => enterNum(0)}>0</div>
-		<div class="key" on:click={nextStep}>Enter</div>
+		<button class="key digit" on:click={() => enterNum(1)}>1</button>
+		<button class="key digit" on:click={() => enterNum(2)}>2</button>
+		<button class="key digit" on:click={() => enterNum(3)}>3</button>
+		<button class="key digit" on:click={() => enterNum(4)}>4</button>
+		<button class="key digit" on:click={() => enterNum(5)}>5</button>
+		<button class="key digit" on:click={() => enterNum(6)}>6</button>
+		<button class="key digit" on:click={() => enterNum(7)}>7</button>
+		<button class="key digit" on:click={() => enterNum(8)}>8</button>
+		<button class="key digit" on:click={() => enterNum(9)}>9</button>
+		<button class="key" on:click={delChar}>Backspace</button>
+		<button class="key digit" on:click={() => enterNum(0)}>0</button>
+		<button class="key" on:click={nextStep}>Enter</button>
 	</div>
 {:else}
 	<h2>Error: Reached invalid state!</h2>
