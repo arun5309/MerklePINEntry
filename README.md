@@ -1,38 +1,23 @@
-# create-svelte
+# Introduction
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte).
+This is a prototype for a [Merkle's puzzles](https://en.wikipedia.org/wiki/Merkle's_Puzzles) based PIN entry method that is resistant to over-the-shoulder attacks. Instead of entering the PIN directly the user enters the PIN one digit at a time while solving a Merkle's puzzle chosen arbitrarily by the user (here the puzzle is addition modulo 100. The first digit serves as the identifier and the second digit acts as the value to shift (addition modulo 10) the PIN digit). During the entry phase for each digit the user needs to type the identifier digit followed by the shifted value. The attacker who doesn't know the entry picked by the user is unable to guess the password.
 
-## Creating a project
+# Usage
 
-If you're seeing this, you've probably already done this step. Congrats!
+Run the below command to install dependencies (Node JS and npm are expected to be installed on your system). Other package managers like yarn, pnpm work too if they are installed.
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
-
-# create a new project in my-app
-npm create svelte@latest my-app
+```sh
+$ npm install
 ```
 
-## Developing
+Run the below command to build the program once the dependencies are installed.
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+```sh
+$ npm run build
 ```
 
-## Building
+Run the below command to run the program once the dependencies are installed. Can be accessed in the browser (running only on the host device) on the URL localhost:4173 or {local IP of host device}:4173.
 
-To create a production version of your app:
-
-```bash
-npm run build
+```sh
+$ npm run preview_host
 ```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
