@@ -103,7 +103,7 @@
 	let digits = '';
 	let started = false;
 	let color_odd = "#ffffff";
-	let color_even = "#aaaaaa";
+	let color_even = "cyan";
 
 	function padNum(num: number) {
 		return num.toString().padStart(2, '0');
@@ -119,7 +119,7 @@
 
 	async function nextPhase() {
 		for (var i = 0; i < 10; ++i) {
-			await new Promise((resolve) => setTimeout(resolve, 400));
+			await new Promise((resolve) => setTimeout(resolve, 200));
 			rotate(cur_puzzle.sol);
 			rotate(cur_puzzle.q);
 			[color_odd, color_even] = [color_even, color_odd];
