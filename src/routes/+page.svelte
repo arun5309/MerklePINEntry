@@ -117,7 +117,7 @@
 
 	async function nextPhase() {
 		for (var i = 0; i < 10; ++i) {
-			await new Promise((resolve) => setTimeout(resolve, 200));
+			await new Promise((resolve) => setTimeout(resolve, 400));
 			rotate(cur_puzzle.sol);
 			rotate(cur_puzzle.q);
 			cur_puzzle = cur_puzzle;
