@@ -102,6 +102,8 @@
 	// Code for UI
 	let digits = '';
 	let started = false;
+	let color_odd = "#ffffff";
+	let color_even = "#aaaaaa";
 
 	function padNum(num: number) {
 		return num.toString().padStart(2, '0');
@@ -120,6 +122,7 @@
 			await new Promise((resolve) => setTimeout(resolve, 400));
 			rotate(cur_puzzle.sol);
 			rotate(cur_puzzle.q);
+			[color_odd, color_even] = [color_even, color_odd];
 			cur_puzzle = cur_puzzle;
 		}
 		// Commenting the below line prevents automatic transitioning
@@ -179,7 +182,7 @@
 {:else if is_entry_phase == false}
 	<!-- modify next two lines to make clicking phase transition -->
 	<!-- on:click={() => (is_entry_phase = true)} -->
-	<div class="puzzle">
+	<div class="puzzle" style="--color-odd: {color_odd}; --color-even: {color_even}">
 		{#each zipped_puzzle as entry}
 			<div class="entry">
 				{`${padNum(sub_mod100(entry.sol, entry.q))} + ${padNum(entry.q)} = ?`}
@@ -244,9 +247,16 @@
 	.entry {
 		display: flex;
 		border-style: solid;
-		background: white;
 		align-items: center;
 		justify-content: center;
 		font-size: 2em;
+	}
+
+	.entry:nth-child(odd) {
+	    background: var(--color-odd);
+	}
+
+	.entry:nth-child(even) {
+	    background: var(--color-even);
 	}
 </style>
