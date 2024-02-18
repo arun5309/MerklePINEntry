@@ -1,18 +1,18 @@
 <script lang="ts">
 	var redirect = false;
 	// var url = '';
-	const evtSource = new EventSource(`http://${import.meta.env.VITE_LOCAL_IP}:8000/stream`);
-	evtSource.onmessage = function (event) {
-		if (event.data) {
-			redirect = true;
-			window.location.replace(event.data);
-			// window.location.href = event.data;
-			// url = event.data; // Frame URL
-			// url = `http://${import.meta.env.VITE_LOCAL_IP}:8000/${event.data}`; // Video URL
-		} else {
-			redirect = false;
-		}
-	};
+	// const evtSource = new EventSource(`http://${import.meta.env.VITE_LOCAL_IP}:8000/stream`);
+	// evtSource.onmessage = function (event) {
+	// 	if (event.data) {
+	// 		redirect = true;
+	// 		window.location.replace(event.data);
+	// 		// window.location.href = event.data;
+	// 		// url = event.data; // Frame URL
+	// 		// url = `http://${import.meta.env.VITE_LOCAL_IP}:8000/${event.data}`; // Video URL
+	// 	} else {
+	// 		redirect = false;
+	// 	}
+	// };
 
 	function rand_digit(): number {
 		for (;;) {
@@ -119,7 +119,7 @@
 
 	async function nextPhase() {
 		for (var i = 0; i < 10; ++i) {
-			await new Promise((resolve) => setTimeout(resolve, 200));
+			await new Promise((resolve) => setTimeout(resolve, 400));
 			rotate(cur_puzzle.sol);
 			rotate(cur_puzzle.q);
 			[color_odd, color_even] = [color_even, color_odd];
