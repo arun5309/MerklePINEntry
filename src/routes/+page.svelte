@@ -146,7 +146,7 @@
 		const shDigit = Number(digits) % 10;
 		let shift_val: number = 0;
 		for (const num of cur_puzzle.sol) {
-			if (Math.floor(num / 10) == idDigit) {
+			if (Math.floor(num / 10) === idDigit) {
 				shift_val = num % 10;
 				break;
 			}
@@ -157,6 +157,127 @@
 		cur_puzzle = make_puzzle();
 		digits = '';
 		is_entry_phase = false;
+		if (pin.length === 4) {
+			finish_transition();
+		}
+	}
+
+	type GetPointsResponse = {
+		uid: number | null;
+		points: number | null;
+		actual_pin: string;
+	};
+
+	type CreateInstanceResponse = {
+		iid: number;
+	};
+
+	type UpdateInstanceResponse = {
+		iid: number;
+	};
+
+	let uid: string = '';
+	let uid_valid: boolean = false;
+	$: uid_valid = check_uid_valid(uid);
+	let iid: number = -1;
+	let actual_pin: string = '';
+
+	function reset() {
+		cur_step = 0;
+		is_entry_phase = false;
+		cur_puzzle = make_puzzle();
+		pin = '';
+		show_pin = false;
+		// Code for UI
+		digits = '';
+		color_odd = '#ffffff';
+		color_even = 'cyan';
+
+		started = false;
+		show_pin = false;
+		uid_valid = false;
+		iid = -1;
+		actual_pin = '';
+		const temp = uid;
+		uid = '';
+		uid = temp;
+	}
+
+	async function get_points(): Promise<GetPointsResponse> {
+		const url = `https://142.93.219.243.nip.io/points/${uid.toLowerCase()}`;
+		const request = new Request(url, { method: 'GET' });
+		const data = await fetch(request);
+		return <GetPointsResponse>(<unknown>data.json());
+	}
+
+	function normalize() {
+		uid = uid;
+	}
+
+	function set_actual_pin(val: string) {
+		actual_pin = val;
+	}
+
+	function isAlphaNumeric(str: string): boolean {
+		let code, i, len;
+		for (i = 0, len = str.length; i < len; i++) {
+			code = str.charCodeAt(i);
+			if (!(code > 47 && code < 58) && !(code > 64 && code < 91) && !(code > 96 && code < 123)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	function check_uid_valid(uid_cand: string): boolean {
+		return uid_cand.length === 6 && isAlphaNumeric(uid_cand);
+	}
+
+	function progress_transition() {
+		if (!uid_valid) return;
+		const url = 'https://142.93.219.243.nip.io/create_instance';
+		const data = {
+			game_id: 'NM',
+			user_id: uid.toLowerCase()
+		};
+		const request = new Request(url, {
+			method: 'POST',
+			body: JSON.stringify(data),
+			headers: new Headers({
+				'Content-Type': 'application/json; charset=UTF-8'
+			})
+		});
+		fetch(request).then((create_instance_value_temp) => {
+			create_instance_value_temp.json().then((temp) => {
+				const create_instance_value = <CreateInstanceResponse>(<unknown>temp);
+				iid = create_instance_value.iid;
+				started = true;
+			});
+		});
+	}
+
+	function finish_transition() {
+		const url = 'https://142.93.219.243.nip.io/update_instance';
+		const data = {
+			iid_value: iid,
+			result_pin: pin
+		};
+		const request = new Request(url, {
+			method: 'POST',
+			body: JSON.stringify(data),
+			headers: new Headers({
+				'Content-Type': 'application/json; charset=UTF-8'
+			})
+		});
+		fetch(request).then((instance_response_value_temp) => {
+			instance_response_value_temp.json().then((temp) => {
+				const instance_response_value = <UpdateInstanceResponse>(<unknown>temp);
+				if (iid !== instance_response_value.iid) {
+					alert('Reached invalid state, please report bug!');
+				}
+				// game_state = GameState.FINISH;
+			});
+		});
 	}
 </script>
 
@@ -172,14 +293,62 @@
 	<!-- <video src={url} autoplay></video> -->
 	<h2>Redirected!</h2>
 {:else if !started}
-	<button on:click={() => (started = true)}>Start Game</button>
-{:else if cur_step == 4}
+	<input
+		type="text"
+		placeholder="User ID"
+		bind:value={uid}
+		on:change={normalize}
+		maxlength="6"
+		name="userid"
+		id="userid"
+	/>
+	{#if uid_valid}
+		{#await get_points()}
+			<p>Validating User ID...</p>
+		{:then get_points_value}
+			{#if get_points_value.uid !== null}
+				{(set_actual_pin(get_points_value.actual_pin), '')}
+				<p style="color: green">Points: {get_points_value.points}</p>
+			{:else}
+				<p style="color: red">Invalid User ID!</p>
+			{/if}
+		{:catch error}
+			{(console.log(error), '')}
+			<p style="color: purple">Network Error: Unable to check validity of User ID!</p>
+		{/await}
+	{/if}
+	<br />
+	<button on:click={progress_transition}>Start Game</button>
+{:else if cur_step === 4}
 	{#if show_pin}
 		<div>Entered PIN: {pin}</div>
 	{/if}
 	<br />
-	<button on:click={() => (show_pin = !show_pin)}>Toggle PIN Visibility</button>
-{:else if is_entry_phase == false}
+	{#if actual_pin === pin}
+		<p style="color: green">Congratulations on entering the correct PIN!</p>
+	{:else}
+		<p style="color: red">Incorrect PIN entered, no points earned!</p>
+	{/if}
+	<br />
+	{#await get_points()}
+		<p>Fetching points...</p>
+	{:then get_points_value}
+		{#if get_points_value.uid !== null}
+			<p style="color: green">Points: {get_points_value.points}</p>
+		{:else}
+			<p style="color: red">Invalid User ID!</p>
+		{/if}
+	{:catch error}
+		{(console.log(error), '')}
+		<p style="color: purple">Network Error: Unable to fetch points!</p>
+	{/await}
+	<br />
+	<button on:click={() => (show_pin = !show_pin)}>Toggle Visibility of Entered PIN</button>
+	<br />
+	<button on:click={reset}>Play Again</button>
+	<br />
+	<button><a href="https://142.93.219.243.nip.io/">Checkout Other Games</a></button>
+{:else if is_entry_phase === false}
 	<!-- modify next two lines to make clicking phase transition -->
 	<!-- on:click={() => (is_entry_phase = true)} -->
 	<div class="puzzle" style="--color-odd: {color_odd}; --color-even: {color_even}">
