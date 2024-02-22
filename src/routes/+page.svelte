@@ -1,5 +1,6 @@
 <script lang="ts">
 	var redirect = false;
+	import banner from '$lib/images/Banners_Mathematical_Merkle.png';
 	// var url = '';
 	// const evtSource = new EventSource(`http://${import.meta.env.VITE_LOCAL_IP}:8000/stream`);
 	// evtSource.onmessage = function (event) {
@@ -118,8 +119,8 @@
 	}
 
 	async function nextPhase() {
-		for (var i = 0; i < 10; ++i) {
-			await new Promise((resolve) => setTimeout(resolve, 400));
+		for (var i = 0; i < 20; ++i) {
+			await new Promise((resolve) => setTimeout(resolve, 650));
 			rotate(cur_puzzle.sol);
 			rotate(cur_puzzle.q);
 			[color_odd, color_even] = [color_even, color_odd];
@@ -279,6 +280,19 @@
 			});
 		});
 	}
+	function gameHeader(num: number) {
+		if (num === 1) {
+			return '1st';
+		} else if (num === 2) {
+			return '2nd';
+		} else if (num === 3) {
+			return '3rd';
+		} else if (num == 4) {
+			return '4th';
+		} else {
+			console.log('some number>4 passed into gameHeader function');
+		}
+	}
 </script>
 
 <svelte:head>
@@ -287,12 +301,14 @@
 	<link rel="preconnect" href={`http://${import.meta.env.VITE_LOCAL_IP}:8000/`} />
 </svelte:head>
 
-<h1>Merkle PIN Entry</h1>
+<!-- <h1>Merkle PIN Entry</h1> -->
 
 {#if redirect}
 	<!-- <video src={url} autoplay></video> -->
 	<h2>Redirected!</h2>
 {:else if !started}
+	<img src={banner} alt="Mathematical Merkle" />
+	<br />
 	<input
 		type="text"
 		placeholder="User ID"
@@ -320,6 +336,8 @@
 	<br />
 	<button on:click={progress_transition}>Start Game</button>
 {:else if cur_step === 4}
+	<img src={banner} alt="Mathematical Merkle" />
+	<br />
 	{#if show_pin}
 		<div>Entered PIN: {pin}</div>
 	{/if}
@@ -349,6 +367,7 @@
 	<br />
 	<button><a href="https://142.93.219.243.nip.io/">Checkout Other Games</a></button>
 {:else if is_entry_phase === false}
+	<h1><strong>{gameHeader(pin.length + 1)} digit</strong> | Round 1</h1>
 	<!-- modify next two lines to make clicking phase transition -->
 	<!-- on:click={() => (is_entry_phase = true)} -->
 	<div class="puzzle" style="--color-odd: {color_odd}; --color-even: {color_even}">
@@ -358,10 +377,14 @@
 			</div>
 		{/each}
 	</div>
+	<h2 style="text-align:center;font-size:1.5em;">
+		Each equation is marching upwards. Track one and just remember it.
+	</h2>
 	{#await nextPhase() catch error}
 		<h2>{error}</h2>
 	{/await}
 {:else if is_entry_phase === true}
+	<h1><strong>{gameHeader(pin.length + 1)} digit</strong> | Round 2</h1>
 	<input
 		bind:value={digits}
 		name="digits"
@@ -384,6 +407,13 @@
 		<button class="key digit" on:click={() => enterNum(0)}>0</button>
 		<button class="key" on:click={nextStep}>Enter</button>
 	</div>
+	<h2 style="text-align:center;">
+		Now solve the problem and consider only the last 2 digits. After this, input the first digit <strong
+			>of the solution</strong
+		>
+		normally. For the second digit of the solution, take it and add your current PIN digit then
+		<strong>input only the last digit</strong>. Take your time.
+	</h2>
 {:else}
 	<h2>Error: Reached invalid state!</h2>
 {/if}
